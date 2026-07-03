@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="shortcut icon" href="https://gateoverflow.in/qa-theme/Polaris/images/favicons/apple-touch-icon.png?v=2884g">
 <title>GATE Test Series Tracker</title>
 <style>
   :root{
@@ -360,23 +359,47 @@ let openIdx = 0;
 const STORE_KEY = 'gate-tracker-progress-v1';
 const NAMES_KEY = 'gate-tracker-names-v1';
 
+// window.storage only exists inside Claude's artifact viewer. When this file is
+// opened directly in a browser (downloaded, double-clicked, etc.) that API is
+// absent, so we fall back to localStorage to keep progress across refreshes.
+const hasCloudStorage = typeof window.storage !== 'undefined' && window.storage;
+
 async function loadState(){
-  try{
-    const r = await window.storage.get(STORE_KEY);
-    if(r && r.value) state = JSON.parse(r.value);
-  }catch(e){ state = {}; }
-  try{
-    const r2 = await window.storage.get(NAMES_KEY);
-    if(r2 && r2.value) names = JSON.parse(r2.value);
-  }catch(e){ names = {}; }
+  if(hasCloudStorage){
+    try{
+      const r = await window.storage.get(STORE_KEY);
+      if(r && r.value) state = JSON.parse(r.value);
+    }catch(e){ state = {}; }
+    try{
+      const r2 = await window.storage.get(NAMES_KEY);
+      if(r2 && r2.value) names = JSON.parse(r2.value);
+    }catch(e){ names = {}; }
+  } else {
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw) state = JSON.parse(raw);
+    }catch(e){ state = {}; }
+    try{
+      const rawN = localStorage.getItem(NAMES_KEY);
+      if(rawN) names = JSON.parse(rawN);
+    }catch(e){ names = {}; }
+  }
   render();
 }
 
 async function saveState(){
-  try{ await window.storage.set(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  if(hasCloudStorage){
+    try{ await window.storage.set(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  } else {
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
 }
 async function saveNames(){
-  try{ await window.storage.set(NAMES_KEY, JSON.stringify(names)); }catch(e){}
+  if(hasCloudStorage){
+    try{ await window.storage.set(NAMES_KEY, JSON.stringify(names)); }catch(e){}
+  } else {
+    try{ localStorage.setItem(NAMES_KEY, JSON.stringify(names)); }catch(e){}
+  }
 }
 
 function tagLabel(tag){
