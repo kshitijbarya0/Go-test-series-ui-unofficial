@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GATE Test Series Tracker</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --border:#e5e7ef;
+    --border-active:#f3b5b5;
+    --ink:#1f2430;
+    --muted:#8a90a3;
+    --accent:#4f63e0;
+    --green:#1fa971;
+    --green-bg:#e9f9f1;
+    --amber:#e6a930;
+    --amber-bg:#fff6e2;
+    --pink:#e0517a;
+    --pink-bg:#fdeaf0;
+    --purple:#7c5ce0;
+    --purple-bg:#f1edfd;
+    --radius:14px;
+    --font-display: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: var(--font-display);
+    background:var(--bg);
+    color:var(--ink);
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  .legend{
+    display:flex;justify-content:center;gap:18px;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;margin-bottom:18px;font-size:12px;color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-weight:600;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .header-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .header-row h1{font-size:19px;margin:0;letter-spacing:-0.01em;}
+  .overall{
+    font-size:12px;color:var(--muted);font-weight:600;
+    background:var(--card);border:1px solid var(--border);
+    padding:6px 12px;border-radius:999px;
+  }
+  .overall b{color:var(--accent);}
+
+  .subject{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    margin-bottom:12px;
+    overflow:hidden;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .subject.open{border-color:var(--border-active); box-shadow:0 2px 14px rgba(224,81,122,.06);}
+  .subject-head{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;cursor:pointer;user-select:none;
+  }
+  .icon{
+    width:30px;height:30px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:700;flex-shrink:0;
+  }
+  .subject-name{font-size:13.5px;font-weight:700;flex:1;}
+  .subject-progress-mini{
+    font-size:11px;color:var(--muted);font-weight:600;min-width:44px;text-align:right;
+  }
+  .count-badge{
+    font-size:11px;font-weight:700;color:var(--muted);
+    background:#f1f2f7;border-radius:999px;padding:3px 10px;
+  }
+  .chevron{
+    width:16px;height:16px;transition:transform .15s ease;color:var(--muted);flex-shrink:0;
+  }
+  .subject.open .chevron{transform:rotate(180deg);}
+
+  .bar-track{height:4px;background:#eef0f6;margin:0 16px;border-radius:99px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:99px;transition:width .25s ease;}
+
+  .test-table{padding:6px 10px 14px;}
+  .test-row{
+    display:grid;
+    grid-template-columns:22px 1fr auto auto;
+    gap:12px;
+    align-items:center;
+    padding:9px 8px;
+    border-radius:9px;
+  }
+  .test-row:hover{background:#fafbfd;}
+  .test-row.done{opacity:.55;}
+
+  .cb{
+    width:18px;height:18px;border-radius:6px;border:1.5px solid #cfd3e2;
+    cursor:pointer;flex-shrink:0;position:relative;background:#fff;
+    transition:all .12s ease;
+  }
+  .cb.checked{background:var(--green);border-color:var(--green);}
+  .cb.checked::after{
+    content:'';position:absolute;left:5px;top:1px;width:5px;height:9px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg);
+  }
+
+  .test-info{min-width:0;}
+  .test-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .test-name{
+    font-size:13px;font-weight:600;outline:none;
+  }
+  .test-row.done .test-name{text-decoration:line-through;text-decoration-color:#b8bcc9;}
+  .tag{
+    font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.02em;
+  }
+  .tag.topic{background:var(--purple-bg);color:var(--purple);}
+  .tag.subject{background:#e6f1fb;color:#2f7fd1;}
+  .tag.mixed{background:var(--amber-bg);color:#b3821f;}
+  .tag.mock{background:var(--pink-bg);color:var(--pink);}
+  .topic-name{
+    font-size:11.5px;color:var(--muted);margin-top:2px;outline:none;
+  }
+
+  .status-pill{
+    font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:999px;
+    white-space:nowrap;justify-self:end;
+  }
+  .status-pill.pending{background:var(--green-bg);color:var(--green);}
+  .status-pill.completed{background:#eef0f6;color:#8a90a3;}
+  .status-pill.wait{background:var(--amber-bg);color:#b3821f;}
+
+  .start-btn{
+    font-size:11px;font-weight:700;color:#fff;background:var(--accent);
+    border:none;border-radius:8px;padding:6px 12px;cursor:pointer;
+    text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+    justify-self:end;
+  }
+  .start-btn:hover{background:#3d50d1;}
+  .start-btn.done{background:#eef0f6;color:#8a90a3;}
+  .start-btn.wait{background:var(--amber-bg);color:#b3821f;cursor:default;}
+
+  .add-row{
+    display:flex;align-items:center;gap:8px;padding:8px 8px 4px;
+  }
+  .add-btn{
+    font-size:11.5px;font-weight:700;color:var(--accent);background:#eef0fd;
+    border:none;border-radius:8px;padding:6px 12px;cursor:pointer;
+  }
+  .add-btn:hover{background:#e1e5fb;}
+
+  .footer-note{
+    text-align:center;font-size:11.5px;color:var(--muted);margin-top:20px;line-height:1.6;
+  }
+  .reset-link{color:var(--pink);cursor:pointer;font-weight:600;text-decoration:underline;}
+
+  .subject-body{display:none;}
+  .subject.open .subject-body{display:block;}
+
+  @media (max-width:480px){
+    .test-table{padding:4px 4px 10px;}
+    .test-row{grid-template-columns:20px 1fr auto;gap:8px;padding:8px 4px;}
+    .status-pill{font-size:9.5px;padding:3px 8px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="legend">
+    <span><span class="dot" style="background:var(--purple)"></span>Topic-wise</span>
+    <span><span class="dot" style="background:#2f7fd1"></span>Subject-wise</span>
+    <span><span class="dot" style="background:var(--amber)"></span>Mixed Subjects</span>
+    <span><span class="dot" style="background:var(--pink)"></span>Full-length Mock</span>
+  </div>
+
+  <div class="header-row">
+    <h1>GATE CSE Test Series Tracker</h1>
+    <div class="overall" id="overallLabel">0 / 0 done</div>
+  </div>
+
+  <div id="subjects"></div>
+
+  <div class="footer-note">
+    Tap a subject to expand it, then check off tests as you finish them.<br>
+    Click any test or topic name to rename it to match your actual series. Your progress is saved automatically.
+    <br><span class="reset-link" id="resetLink">Reset all progress</span>
+  </div>
+</div>
+
+<script>
+const ICONS = ['📕','📗','📘','📙','🔷','🗄️','{ }','⌘','🌐','⚙️','🧮','💻','🔢','📊','⭐','👑'];
+const COLORS = [
+  {bg:'#fdeaf0', fg:'#e0517a'},
+  {bg:'#e9f9f1', fg:'#1fa971'},
+  {bg:'#e6f1fb', fg:'#2f7fd1'},
+  {bg:'#fff6e2', fg:'#b3821f'},
+  {bg:'#f1edfd', fg:'#7c5ce0'},
+];
+
+// Real data pulled directly from the GO Classes GATE CSE test series page,
+// including each test's live link. "wait" tests are marked Coming Soon.
+const DATA = [
+  { name:'Discrete Mathematics', tests:[
+    {name:'Topic Test 1', topic:'Propositional logic, First order logic', tag:'topic', link:'https://gateoverflow.in/exam/1316/go-classes-cs-test-series-discrete-mathematics-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Set Theory, Functions, Relations, Lattices', tag:'topic', link:'https://gateoverflow.in/exam/1317/go-classes-cs-test-series-discrete-mathematics-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Group Theory', tag:'topic', link:'https://gateoverflow.in/exam/1318/go-classes-cs-test-series-discrete-mathematics-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Combinatorics', tag:'topic', link:'https://gateoverflow.in/exam/1319/go-classes-test-series-discrete-mathematics-topic-wise-test-4'},
+    {name:'Topic Test 5', topic:'Graph Theory', tag:'topic', link:'https://gateoverflow.in/exam/1320/go-classes-test-series-discrete-mathematics-topic-wise-test-5'},
+    {name:'Subject Test 1', topic:'Complete Discrete Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1327/go-classes-cs-test-series-discrete-mathematics-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete Discrete Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1328/go-classes-cs-test-series-discrete-mathematics-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete Discrete Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1329/go-classes-cs-test-series-discrete-mathematics-subject-wise-test-3'},
+  ]},
+  { name:'Engineering Mathematics', tests:[
+    {name:'Topic Test 1', topic:'Complete Linear Algebra', tag:'topic', link:'https://gateoverflow.in/exam/1322/go-classes-cs%26da-test-series-linear-algebra-topic-wise-test-1'},
+    {name:'Complete Linear Algebra Topic Test', topic:'Complete Linear Algebra', tag:'topic', link:'https://gateoverflow.in/exam/1323/go-classes-cs%26da-test-series-linear-algebra-topic-wise-test-2'},
+    {name:'Topic Test 2', topic:'Counting', tag:'topic', link:'https://gateoverflow.in/exam/1333/go-classes-cs-da-test-series-probability-and-statistics-counting'},
+    {name:'Combinatorics Counting Test', topic:'Counting', tag:'topic', link:'https://gateoverflow.in/exam/1348/go-classes-cs-da-test-series-combinatorics-counting-extra-topic-wise-test-1'},
+    {name:'Topic Test 3', topic:'Bayes Theorem, Conditional Probability', tag:'topic', link:'https://gateoverflow.in/exam/1334/go-classes-cs-da-test-series-probability-and-statistics-bayes-theorem-conditional-probability'},
+    {name:'Topic Test 4', topic:'Complete Probability', tag:'topic', link:'https://gateoverflow.in/exam/1335/go-classes-cs-test-series-probability-topic-wise-test-3'},
+    {name:'Topic Test 5', topic:'Complete Calculus', tag:'topic', link:'https://gateoverflow.in/exam/1336/go-classes-cs-test-series-calculus-topic-wise-test-5'},
+    {name:'Subject Test 1', topic:'Complete Eng Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1337/go-classes-cs-test-series-engineering-mathematics-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete Eng Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1338/go-classes-cs-test-series-engineering-mathematics-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete Eng Maths Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1339/go-classes-cs-test-series-engineering-mathematics-subject-wise-test-3'},
+  ]},
+  { name:'Digital Logic', tests:[
+    {name:'Topic Test 1', topic:'Boolean Algebra, Minimization, Number System', tag:'topic', link:'https://gateoverflow.in/exam/1341/go-classes-cs-test-series-digital-logic-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Combinational Circuits', tag:'topic', link:'https://gateoverflow.in/exam/1342/go-classes-cs-test-series-digital-logic-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Sequential Circuits', tag:'topic', link:'https://gateoverflow.in/exam/1343/go-classes-cs-test-series-digital-logic-topic-wise-test-3'},
+    {name:'Subject Test 1', topic:'Complete Digital Logic Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1344/go-classes-cs-test-series-digital-logic-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete Digital Logic Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1345/go-classes-cs-test-series-digital-logic-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete Digital Logic Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1347/go-classes-cs-test-series-digital-logic-subject-wise-test-3'},
+  ]},
+  { name:'DBMS', tests:[
+    {name:'Topic Test 1', topic:'Normalization', tag:'topic', link:'https://gateoverflow.in/exam/1349/go-classes-cs-da-test-series-databases-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'ER Model, Integrity Constraints', tag:'topic', link:'https://gateoverflow.in/exam/1350/go-classes-cs-da-test-series-databases-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Queries, SQL, TRC, Relational Algebra', tag:'topic', link:'https://gateoverflow.in/exam/1351/go-classes-cs-da-test-series-databases-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Indexing, B Tree, B+ Tree', tag:'topic', link:'https://gateoverflow.in/exam/1352/go-classes-cs-da-test-series-databases-topic-wise-test-4'},
+    {name:'Topic Test 5', topic:'Transaction management', tag:'topic', link:'https://gateoverflow.in/exam/1353/go-classes-cs-test-series-databases-topic-wise-test-5'},
+    {name:'Subject Test 1', topic:'Complete Database Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1354/go-classes-test-series-dbms-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete Database Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1355/go-classes-test-series-dbms-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete Database Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1356/go-classes-test-series-dbms-subject-wise-test-3'},
+  ]},
+  { name:'C Programming', tests:[
+    {name:'Topic Test 1', topic:'Number Rep., Control Statements, Operators', tag:'topic', link:'https://gateoverflow.in/exam/1361/go-classes-cs-test-series-c-programming-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Compilation, Storage class, Function, Recursion, Pointers', tag:'topic', link:'https://gateoverflow.in/exam/1362/go-classes-cs-test-series-c-programming-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Pointers, Strings, Structures, DMA', tag:'topic', link:'https://gateoverflow.in/exam/1363/go-classes-cs-test-series-c-programming-topic-wise-test-3'},
+    {name:'Subject Test 1', topic:'Complete C Programming Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1364/go-classes-cs-test-series-c-programming-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete C Programming Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1365/go-classes-cs-test-series-c-programming-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete C Programming Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1366/go-classes-cs-test-series-c-programming-subject-wise-test-3'},
+  ]},
+  { name:'Theory of Computation', tests:[
+    {name:'Topic Test 1', topic:'Finite Automata', tag:'topic', link:'https://gateoverflow.in/exam/1367/go-classes-cs-test-series-theory-of-computation-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Regular Expression', tag:'topic', link:'https://gateoverflow.in/exam/1368/go-classes-cs-test-series-theory-of-computation-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'CFG, PDA', tag:'topic', link:'https://gateoverflow.in/exam/1369/go-classes-cs-test-series-theory-of-computation-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Closure Properties, Language Class Detection', tag:'topic', link:'https://gateoverflow.in/exam/1370/go-classes-cs-test-series-theory-of-computation-topic-wise-test-4'},
+    {name:'Topic Test 5', topic:'Decidability, Undecidability', tag:'topic', link:'https://gateoverflow.in/exam/1371/go-classes-cs-test-series-theory-of-computation-topic-wise-test-5'},
+    {name:'Topic Test 6', topic:'Countability', tag:'topic', link:'https://gateoverflow.in/exam/2400/go-classes-cs-test-series-theory-of-computation-topic-wise-test-6'},
+    {name:'Subject Test 1', topic:'Complete TOC Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1372/go-classes-cs-test-series-theory-of-computation-subject-wise-test-1'},
+    {name:'Subject Test 2', topic:'Complete TOC Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/1374/go-classes-cs-test-series-theory-of-computation-subject-wise-test-2'},
+    {name:'Subject Test 3', topic:'Complete TOC Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/2467/go-classes-cs-test-series-theory-of-computation-subject-wise-test-3'},
+  ]},
+  { name:'Computer Networks', tests:[
+    {name:'Topic Test 1', topic:'IP addressing, Data Link layer', tag:'topic', link:'https://gateoverflow.in/exam/1375/go-classes-cs-test-series-computer-networks-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Network Layer', tag:'topic', link:'https://gateoverflow.in/exam/1376/go-classes-cs-test-series-computer-networks-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Routing algorithms, Transport layer', tag:'topic', link:'https://gateoverflow.in/exam/1377/go-classes-cs-test-series-computer-networks-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Transport layer, Application Layer', tag:'topic', link:'https://gateoverflow.in/exam/1378/go-classes-cs-test-series-computer-networks-topic-wise-test-4'},
+    {name:'Subject Test 1', topic:'Complete CN Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete CN Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 3', topic:'Complete CN Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Compiler Design', tests:[
+    {name:'Topic Test 1', topic:'Lexical, Syntax Analysis, Parsers', tag:'topic', link:'https://gateoverflow.in/exam/1379/go-classes-cs-test-series-compiler-design-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Semantic Analysis, SDT, SDD, Parser', tag:'topic', link:'https://gateoverflow.in/exam/1380/go-classes-cs-test-series-compiler-design-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Intermediate Codes, DAG, SSA, Code Optimisation', tag:'topic', link:'https://gateoverflow.in/exam/1381/go-classes-cs-test-series-compiler-design-topic-wise-test-3'},
+    {name:'Subject Test 1', topic:'Complete Compiler Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete Compiler Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Computer Organization', tests:[
+    {name:'Topic Test 1', topic:'Basics, Addressing Modes, Control Unit', tag:'topic', link:'https://gateoverflow.in/exam/1382/go-classes-cs-test-series-co-and-architecture-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Pipelining', tag:'topic', link:'https://gateoverflow.in/exam/1383/go-classes-cs-test-series-co-and-architecture-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Cache Memory', tag:'topic', link:'https://gateoverflow.in/exam/1384/go-classes-cs-test-series-co-and-architecture-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'I/O Interfacing, Magnetic Disk', tag:'topic', link:'https://gateoverflow.in/exam/1385/go-classes-cs-test-series-mock-gate-test-1'},
+    {name:'Subject Test 1', topic:'Complete COA Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete COA Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 3', topic:'Complete COA Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Operating Systems', tests:[
+    {name:'Topic Test 1', topic:'Scheduling', tag:'topic', link:'https://gateoverflow.in/exam/1386/go-classes-cs-test-series-operating-systems-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Synchronisation, Deadlock', tag:'topic', link:'https://gateoverflow.in/exam/1387/go-classes-cs-test-series-operating-systems-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Memory Management', tag:'topic', link:'https://gateoverflow.in/exam/1388/go-classes-cs-test-series-operating-systems-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'File system, Fork, Systems calls', tag:'topic', link:'https://gateoverflow.in/exam/1413/go-classes-cs-test-series-operating-systems-topic-wise-test-4'},
+    {name:'Subject Test 1', topic:'Complete OS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete OS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 3', topic:'Complete OS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Data Structures', tests:[
+    {name:'Topic Test 1', topic:'Linked List', tag:'topic', link:'https://gateoverflow.in/exam/1389/go-classes-test-series-data-structures-and-algorithms-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Asymptotic Notations, Loops TC', tag:'topic', link:'https://gateoverflow.in/exam/1390/go-classes-test-series-data-structure-and-algorithms-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Stack and Queue', tag:'topic', link:'https://gateoverflow.in/exam/1391/go-classes-test-series-data-structures-and-algorithms-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Combinatorics in Trees (BST, AVL, Heap)', tag:'topic', link:'https://gateoverflow.in/exam/1414/go-classes-test-series-data-structures-topic-wise-test-4'},
+    {name:'Topic Test 5', topic:'Hashing with Probability', tag:'topic', link:'https://gateoverflow.in/exam/1415/go-classes-test-series-data-structures-topic-wise-test-5'},
+    {name:'Subject Test 1', topic:'Complete DS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete DS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 3', topic:'Complete DS Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Algorithms', tests:[
+    {name:'Topic Test 1', topic:'Divide and Conquer', tag:'topic', link:'https://gateoverflow.in/exam/2376/go-classes-cs-test-series-algorithms-topic-wise-test-1'},
+    {name:'Topic Test 2', topic:'Recurrence relation', tag:'topic', link:'https://gateoverflow.in/exam/2375/go-classes-cs-test-series-algorithms-topic-wise-test-2'},
+    {name:'Topic Test 3', topic:'Greedy Algorithms', tag:'topic', link:'https://gateoverflow.in/exam/2377/go-classes-cs-test-series-algorithms-topic-wise-test-3'},
+    {name:'Topic Test 4', topic:'Dynamic Programming', tag:'topic', link:'https://gateoverflow.in/exam/2378/go-classes-cs-test-series-algorithms-topic-wise-test-4'},
+    {name:'Subject Test 1', topic:'Complete Algorithm Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 2', topic:'Complete Algorithm Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+    {name:'Subject Test 3', topic:'Complete Algorithm Syllabus', tag:'subject', wait:true, link:'https://www.youtube.com/live/arlC0EA-jrs?si=ir-oyy7XIujnIc9I'},
+  ]},
+  { name:'Aptitude', tests:[
+    {name:'Aptitude Test 1', topic:'Complete Aptitude Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/2465/go-classes-cs-da-test-series-aptitude-test-1'},
+    {name:'Aptitude Test 2', topic:'Complete Aptitude Syllabus', tag:'subject', link:'https://gateoverflow.in/exam/2464/go-classes-cs-da-test-series-aptitude-test-2'},
+  ]},
+  { name:'Mixed Subjects Full Length Tests', tests:[
+    {name:'Mixed Test 1', topic:'Discrete Mathmatics + Engineering Mathmatics', tag:'mixed', link:'https://gateoverflow.in/exam/1340/go-classes-cs-test-series-mixed-subjects-full-length-test-1'},
+    {name:'Mixed Test 2', topic:'CN + DBMS + TOC + CD', tag:'mixed', link:'https://gateoverflow.in/exam/2459/go-classes-cs-test-series-mixed-subjects-full-length-test-2'},
+    {name:'Mixed Test 3', topic:'OS + COA + DL', tag:'mixed', link:'https://gateoverflow.in/exam/2460/go-classes-cs-test-series-mixed-subjects-full-length-test-3'},
+    {name:'Mixed Test 4', topic:'C Programming + DSA', tag:'mixed', link:'https://gateoverflow.in/exam/2461/go-classes-cs-test-series-mixed-subjects-full-length-test-4'},
+  ]},
+  { name:'Full-Length Mock GATE Tests', tests:[
+    {name:'GO Classes CS Mock Test 1', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/1416/go-classes-cs-test-series-mock-gate-test-1'},
+    {name:'GO Classes CS Mock Test 2', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/1417/go-classes-cs-test-series-mock-gate-test-2'},
+    {name:'GO Classes CS Mock Test 3', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/1420/go-classes-cs-test-series-mock-gate-test-3'},
+    {name:'GO Classes CS Mock Test 4', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/1419/go-classes-cs-test-series-mock-gate-test-4'},
+    {name:'GO Classes CS Mock Test 5', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/1421/go-classes-cs-test-series-mock-gate-test-5'},
+    {name:'GO Classes CS Mock Test 6', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2443/go-classes-cs-test-series-mock-gate-test-6'},
+    {name:'GO Classes CS Mock Test 7', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2444/go-classes-cs-test-series-mock-gate-test-7'},
+    {name:'GO Classes CS Mock Test 8', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2445/go-classes-cs-test-series-mock-gate-test-8'},
+    {name:'GO Classes CS Mock Test 9', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2446/go-classes-cs-test-series-mock-gate-test-9'},
+    {name:'GO Classes CS Mock Test 10', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2447/go-classes-cs-test-series-mock-gate-test-10'},
+    {name:'GO Classes CS Mock Test 11', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2448/go-classes-cs-test-series-mock-gate-test-11'},
+    {name:'GO Classes CS Mock Test 12', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2449/go-classes-cs-test-series-mock-gate-test-12'},
+    {name:'GO Classes CS Mock Test 13', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2450/go-classes-cs-test-series-mock-gate-test-13'},
+    {name:'GO Classes CS Mock Test 14', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2451/go-classes-cs-test-series-mock-gate-test-14'},
+    {name:'GO Classes CS Mock Test 15', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2453/go-classes-cs-test-series-mock-gate-test-15'},
+    {name:'GO Classes CS Mock Test 16', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2454/go-classes-cs-test-series-mock-gate-test-16'},
+    {name:'GO Classes CS Mock Test 17', topic:'Complete GATE CSE Syllabus', tag:'mock', link:'https://gateoverflow.in/exam/2455/go-classes-cs-test-series-mock-gate-test-17'},
+  ]},
+];
+
+function buildTests(subj){
+  return subj.tests;
+}
+
+let state = {}; // { "subjIdx-testIdx": true/false }
+let names = {}; // { "subjIdx-testIdx-name" or "-topic": "custom text" }
+let openIdx = 0;
+
+const STORE_KEY = 'gate-tracker-progress-v1';
+const NAMES_KEY = 'gate-tracker-names-v1';
+
+async function loadState(){
+  try{
+    const r = await window.storage.get(STORE_KEY);
+    if(r && r.value) state = JSON.parse(r.value);
+  }catch(e){ state = {}; }
+  try{
+    const r2 = await window.storage.get(NAMES_KEY);
+    if(r2 && r2.value) names = JSON.parse(r2.value);
+  }catch(e){ names = {}; }
+  render();
+}
+
+async function saveState(){
+  try{ await window.storage.set(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+async function saveNames(){
+  try{ await window.storage.set(NAMES_KEY, JSON.stringify(names)); }catch(e){}
+}
+
+function tagLabel(tag){
+  return {topic:'Topic', subject:'Subject', mixed:'Mixed', mock:'Mock'}[tag] || 'Topic';
+}
+
+function render(){
+  const container = document.getElementById('subjects');
+  container.innerHTML = '';
+  let totalDone = 0, totalAll = 0;
+
+  DATA.forEach((subj, si)=>{
+    const tests = buildTests(subj);
+    totalAll += tests.length;
+    let doneCount = 0;
+    tests.forEach((t,ti)=>{ if(state[si+'-'+ti]) doneCount++; });
+    totalDone += doneCount;
+
+    const color = COLORS[si % COLORS.length];
+    const isOpen = si === openIdx;
+
+    const card = document.createElement('div');
+    card.className = 'subject' + (isOpen ? ' open':'');
+
+    const pct = tests.length ? Math.round((doneCount/tests.length)*100) : 0;
+
+    card.innerHTML = `
+      <div class="subject-head" data-si="${si}">
+        <div class="icon" style="background:${color.bg};color:${color.fg}">${ICONS[si % ICONS.length]}</div>
+        <div class="subject-name">${subj.name}</div>
+        <div class="subject-progress-mini">${doneCount}/${tests.length}</div>
+        <div class="count-badge">${tests.length} Tests</div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="subject-body">
+        <div class="test-table" data-si="${si}"></div>
+      </div>
+    `;
+    container.appendChild(card);
+
+    const table = card.querySelector('.test-table');
+    tests.forEach((t, ti)=>{
+      const key = si+'-'+ti;
+      const checked = !!state[key];
+      const nameOverride = names[key+'-name'];
+      const topicOverride = names[key+'-topic'];
+      const row = document.createElement('div');
+      row.className = 'test-row' + (checked ? ' done':'');
+
+      let statusHtml, startHtml;
+      if(t.wait){
+        statusHtml = `<div class="status-pill wait">Coming Soon</div>`;
+        startHtml = `<a class="start-btn wait" href="${t.link}" target="_blank" rel="noopener">Notify</a>`;
+      } else if(checked){
+        statusHtml = `<div class="status-pill completed">Completed</div>`;
+        startHtml = `<a class="start-btn done" href="${t.link}" target="_blank" rel="noopener">Retake ▶</a>`;
+      } else {
+        statusHtml = `<div class="status-pill pending">Ready to Attempt</div>`;
+        startHtml = `<a class="start-btn" href="${t.link}" target="_blank" rel="noopener">Start ▶</a>`;
+      }
+
+      row.innerHTML = `
+        <div class="cb ${checked?'checked':''}" data-key="${key}"></div>
+        <div class="test-info">
+          <div class="test-name-row">
+            <span class="test-name" contenteditable="true" spellcheck="false" data-key="${key}" data-field="name">${nameOverride ?? t.name}</span>
+            <span class="tag ${t.tag}">${tagLabel(t.tag)}</span>
+          </div>
+          <div class="topic-name" contenteditable="true" spellcheck="false" data-key="${key}" data-field="topic">${topicOverride ?? t.topic}</div>
+        </div>
+        ${statusHtml}
+        ${startHtml}
+      `;
+      table.appendChild(row);
+    });
+  });
+
+  document.getElementById('overallLabel').innerHTML = `<b>${totalDone}</b> / ${totalAll} done`;
+
+  // listeners
+  container.querySelectorAll('.subject-head').forEach(h=>{
+    h.addEventListener('click', ()=>{
+      const si = parseInt(h.dataset.si);
+      openIdx = (openIdx === si) ? -1 : si;
+      render();
+    });
+  });
+  container.querySelectorAll('.cb').forEach(cb=>{
+    cb.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const key = cb.dataset.key;
+      state[key] = !state[key];
+      saveState();
+      render();
+    });
+  });
+  container.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.addEventListener('click', e=>e.stopPropagation());
+    el.addEventListener('blur', ()=>{
+      const key = el.dataset.key, field = el.dataset.field;
+      names[key+'-'+field] = el.textContent.trim();
+      saveNames();
+    });
+    el.addEventListener('keydown', e=>{
+      if(e.key === 'Enter'){ e.preventDefault(); el.blur(); }
+    });
+  });
+}
+
+document.getElementById('resetLink').addEventListener('click', async ()=>{
+  if(confirm('Clear all checked tests? This cannot be undone.')){
+    state = {};
+    await saveState();
+    render();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>
